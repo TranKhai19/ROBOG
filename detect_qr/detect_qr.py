@@ -6,11 +6,9 @@ import time
 cap = cv2.VideoCapture(0)
 previousTime = 0
 currentTime = 0
-timer = 0
 
 scanned_data = []
-enable = True  # Biến để kiểm soát quá trình quét
-last_enable = True  # Biến để kiểm soát quá trình quét
+enable = True
 
 def process_scanned_data(data):
     scanned_data.append(data)
@@ -20,23 +18,19 @@ while True:
     success, img = cap.read()
     if not success:
         break
-    qrcodes = decode(img)
-     # Chỉ quét khi biến enable là True
-    for code in decode(img):
-        decode_data = code.data.decode("utf-8")
-        rect_pts = code.rect
-        # print(len(decode_data))
-        if enable is True:
+
+    if enable:  # Chỉ quét khi biến enable là True
+        for code in decode(img):
+            decode_data = code.data.decode("utf-8")
+
+            rect_pts = code.rect
+
             if decode_data:
                 pts = np.array([code.polygon], np.int32)
-                cv2.polylines(img, [pts], True, (255,0,0), 3)
-                cv2.putText(img, str(decode_data), (rect_pts[0], rect_pts[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0,255,0), 2)
-                enable = False
+                cv2.polylines(img, [pts], True, (255, 0, 0), 3)
+                cv2.putText(img, str(decode_data), (rect_pts[0], rect_pts[1]), cv2.FONT_HERSHEY_COMPLEX_SMALL, 1, (0, 255, 0), 2)
                 process_scanned_data(decode_data)
-                timer += 1
-    if len(qrcodes) ==0:
-        timer -= 1
-        enable = True
+                enable = False  # Sau khi quét xong, tắt enable để chỉ quét 1 lần
 
     currentTime = time.time()
     fps = 1 / (currentTime - previousTime)
